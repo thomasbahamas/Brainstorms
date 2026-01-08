@@ -1,20 +1,55 @@
-# Personal Analytics Dashboard
+# Personal Analytics Command Center v2.0
 
-A comprehensive, all-in-one analytics dashboard designed for maximizing productivity, tracking crypto opportunities, and monitoring personal wellness.
+**From Trader Dashboard to Media Mogul HQ** — A comprehensive command center that combines tactical crypto tracking with strategic macro intelligence and regulatory navigation.
 
 ![Dashboard](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge&logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3.x-38bdf8?style=for-the-badge&logo=tailwind-css)
 
+## What's New in v2.0 🚀
+
+**Strategic Intelligence Layer** — The difference between tracking *what's happening* and understanding *why it's happening*:
+
+### 🍌 The Banana Zone (Macro Intelligence)
+- **M2 Liquidity Tracking**: Live Federal Reserve M2 money supply data via FRED API
+- **Leading Indicator**: Historically predicts crypto repricing events 3-6 months in advance
+- **Raoul Pal Thesis**: Visualize the "liquidity wave" that drives institutional capital flows
+
+### 🛡️ Regulatory Command Center
+- **Traffic Light System**: Instant clarity on jurisdictions (Safe/Caution/Restricted)
+- **DFAL Countdown**: Days until California's Digital Financial Assets Law enforcement
+- **Strategic Moves**: Wyoming LLC? Dubai residency? Make informed decisions
+- **Content Angles**: Auto-generated video ideas from regulatory trends
+
+### 💰 Real Money Workstation
+- **Stablecoin Velocity**: Track USDC/USDT/PYUSD supply and movement on Solana
+- **PayFi Signal**: Differentiate casino volume from real economic activity
+- **Yield Spread Analysis**: DeFi yield vs. risk-free RWA rate (market sentiment indicator)
+- **RWA Protocol Tracking**: Monitor Ondo, Maple, Centrifuge TVL and yields
+
+### ✨ Script-to-Screen AI Triggers
+- **Auto-Generated Video Ideas**: Based on live macro, stablecoin, and sentiment data
+- **Urgency Levels**: High/medium/low priority based on data signals
+- **Hook Suggestions**: Pre-written video hooks matched to current narratives
+- **Trendiness Scoring**: Algorithmic view projections for each idea
+
 ## Overview
 
-This dashboard combines multiple analytics modules into a single, unified interface to help you:
+This command center combines tactical and strategic modules:
+
+**Tactical (Day-to-Day):**
 - Track Solana wallet assets and DeFi positions
 - Monitor crypto market narratives and trends
 - Discover and track airdrop opportunities
 - Identify trading signals and opportunities
 - Plan content strategy for Solana Floor
 - Track health and fitness metrics
+
+**Strategic (Big Picture):**
+- Global M2 liquidity trends (the "why" behind price movements)
+- Regulatory landscape navigation (where you can operate)
+- Real money flows vs. casino volume (institutional signals)
+- Automated narrative triggers (data-driven content strategy)
 
 ## Features
 

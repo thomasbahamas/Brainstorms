@@ -8,7 +8,11 @@ import { AirdropTracker } from "@/components/crypto/airdrop-tracker"
 import { TradingSignals } from "@/components/crypto/trading-signals"
 import { HotTopics } from "@/components/trends/hot-topics"
 import { VideoIdeas } from "@/components/content/video-ideas"
+import { NarrativeTriggers } from "@/components/content/narrative-triggers"
 import { FitnessTracker } from "@/components/health/fitness-tracker"
+import { BananaZoneChart } from "@/components/macro/banana-zone-chart"
+import { RegulatoryCommandCenter } from "@/components/regulatory/regulatory-command-center"
+import { RealMoneyWorkstation } from "@/components/rwa/real-money-workstation"
 import {
   mockTokens,
   mockNarratives,
@@ -37,7 +41,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Personal Analytics</h1>
-                <p className="text-xs text-gray-400">Dashboard v1.0</p>
+                <p className="text-xs text-gray-400">Command Center v2.0</p>
               </div>
             </div>
 
@@ -67,6 +71,19 @@ export default function Home() {
             <StatsOverview stats={mockDashboardStats} />
           </section>
 
+          {/* Macro Intelligence - THE BIG PICTURE */}
+          <section>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                🍌 Macro Intelligence: The Big Picture
+              </span>
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BananaZoneChart />
+              <RegulatoryCommandCenter />
+            </div>
+          </section>
+
           {/* Crypto Section */}
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">
@@ -92,10 +109,12 @@ export default function Home() {
                 Market Intelligence
               </span>
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <NarrativesTracker narratives={mockNarratives} />
               <AirdropTracker airdrops={mockAirdrops} />
             </div>
+            {/* Real Money Section */}
+            <RealMoneyWorkstation />
           </section>
 
           {/* Trading & Topics */}
@@ -118,7 +137,10 @@ export default function Home() {
                 Solana Floor Content Strategy
               </span>
             </h2>
-            <VideoIdeas ideas={mockVideoIdeas} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <NarrativeTriggers />
+              <VideoIdeas ideas={mockVideoIdeas} />
+            </div>
           </section>
 
           {/* Health & Fitness */}
@@ -139,8 +161,8 @@ export default function Home() {
       <footer className="border-t border-gray-800 mt-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-400 text-sm">
-            <p>Personal Analytics Dashboard • Built for maximizing productivity and alpha</p>
-            <p className="mt-2">Track everything that matters • Make better decisions</p>
+            <p>Personal Analytics Command Center v2.0 • From Trader Dashboard to Media Mogul HQ</p>
+            <p className="mt-2">Track Macro • Navigate Regulation • Build Content Empire • Stay Healthy</p>
           </div>
         </div>
       </footer>

@@ -1,12 +1,28 @@
-# Personal Analytics Command Center v2.0
+# Personal Analytics Command Center v3.0 🤖
 
-**From Trader Dashboard to Media Mogul HQ** — A comprehensive command center that combines tactical crypto tracking with strategic macro intelligence and regulatory navigation.
+**The Agentic Shift: From Passive Dashboard to Autonomous Workforce**
+
+"In an agentic world, apps become passive databases while AI agents hold the intelligence, make decisions & do the work." — Satya Nadella
 
 ![Dashboard](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge&logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3.x-38bdf8?style=for-the-badge&logo=tailwind-css)
+![Agents](https://img.shields.io/badge/Agents-5-purple?style=for-the-badge&logo=robot)
 
-## What's New in v2.0 🚀
+## What's New in v3.0 🚀
+
+**The Agentic Layer** — Autonomous agents that work while you sleep:
+
+### 🤖 Autonomous Agents (NEW!)
+- **Macro Analyst Agent**: Monitors M2 liquidity, auto-generates video scripts, books filming slots
+- **Event-Driven Runtime**: Cron-based scheduling, action queue, approval workflow
+- **Tool Integration**: LLMs, Calendar, Blockchain, Notifications, Content Gen
+- **Real-Time Monitoring**: Dashboard shows agent status, pending actions, event logs
+- **3 Autonomy Levels**: Notify → Suggest → Execute
+
+[**→ Full Agent Documentation**](./AGENTS.md)
+
+## Previous Updates (v2.0)
 
 **Strategic Intelligence Layer** — The difference between tracking *what's happening* and understanding *why it's happening*:
 

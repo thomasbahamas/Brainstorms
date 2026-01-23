@@ -13,6 +13,7 @@ import { FitnessTracker } from "@/components/health/fitness-tracker"
 import { BananaZoneChart } from "@/components/macro/banana-zone-chart"
 import { RegulatoryCommandCenter } from "@/components/regulatory/regulatory-command-center"
 import { RealMoneyWorkstation } from "@/components/rwa/real-money-workstation"
+import { AgentMonitor } from "@/components/agents/agent-monitor"
 import {
   mockTokens,
   mockNarratives,
@@ -41,7 +42,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Personal Analytics</h1>
-                <p className="text-xs text-gray-400">Command Center v2.0</p>
+                <p className="text-xs text-gray-400">v3.0 Agentic</p>
               </div>
             </div>
 
@@ -69,6 +70,16 @@ export default function Home() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
             <StatsOverview stats={mockDashboardStats} />
+          </section>
+
+          {/* Agentic Layer - THE VALUE LAYER */}
+          <section>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+                🤖 Autonomous Agents: The Agentic Layer
+              </span>
+            </h2>
+            <AgentMonitor />
           </section>
 
           {/* Macro Intelligence - THE BIG PICTURE */}

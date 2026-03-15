@@ -1,15 +1,19 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { VideoIdea } from "@/types"
+import { useAppStore, VideoIdeaStore } from "@/lib/store"
 import { formatNumber } from "@/lib/utils"
-import { Video, Zap, Eye, Calendar } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Video, Zap, Eye, Calendar, Plus, ChevronRight } from "lucide-react"
+import { useState } from "react"
 
-interface VideoIdeasProps {
-  ideas: VideoIdea[]
-}
+const STATUS_FLOW: VideoIdeaStore["status"][] = ["idea", "planned", "filming", "editing", "published"]
 
-export function VideoIdeas({ ideas }: VideoIdeasProps) {
+export function VideoIdeas() {
+  const { videoIdeas, updateVideoIdea, addVideoIdea } = useAppStore()
+  const [showAdd, setShowAdd] = useState(false)
+  const [newIdea, setNewIdea] = useState({ title: "", topic: "" })
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-500/10 border-red-500/30 text-red-400'
@@ -21,12 +25,36 @@ export function VideoIdeas({ ideas }: VideoIdeasProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published': return 'text-green-500'
-      case 'editing': return 'text-purple-500'
-      case 'filming': return 'text-blue-500'
-      case 'planned': return 'text-yellow-500'
-      default: return 'text-gray-500'
+      case 'published': return 'bg-green-500/10 border-green-500/30 text-green-400'
+      case 'editing': return 'bg-purple-500/10 border-purple-500/30 text-purple-400'
+      case 'filming': return 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+      case 'planned': return 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+      default: return 'bg-gray-500/10 border-gray-500/30 text-gray-400'
     }
+  }
+
+  const cycleStatus = (id: string, currentStatus: VideoIdeaStore["status"]) => {
+    const idx = STATUS_FLOW.indexOf(currentStatus)
+    const next = STATUS_FLOW[(idx + 1) % STATUS_FLOW.length]
+    updateVideoIdea(id, { status: next })
+  }
+
+  const handleAdd = () => {
+    if (!newIdea.title) return
+    addVideoIdea({
+      id: `v${Date.now()}`,
+      title: newIdea.title,
+      topic: newIdea.topic || "General",
+      priority: "medium",
+      estimatedViews: 0,
+      trendinessScore: 0,
+      relatedNarratives: [],
+      hooks: [],
+      keyPoints: [],
+      status: "idea",
+    })
+    setNewIdea({ title: "", topic: "" })
+    setShowAdd(false)
   }
 
   return (
@@ -34,15 +62,34 @@ export function VideoIdeas({ ideas }: VideoIdeasProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Video className="h-5 w-5 text-purple-500" />
-          Solana Floor Video Ideas
+          Content Pipeline
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {ideas.length === 0 ? (
+          {/* Status summary */}
+          <div className="flex gap-2 mb-4">
+            {STATUS_FLOW.map((status) => {
+              const count = videoIdeas.filter((v) => v.status === status).length
+              return (
+                <div
+                  key={status}
+                  className={cn(
+                    "flex-1 rounded-lg border px-2 py-1.5 text-center",
+                    getStatusColor(status)
+                  )}
+                >
+                  <p className="text-lg font-bold">{count}</p>
+                  <p className="text-[10px] capitalize">{status}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          {videoIdeas.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No video ideas yet</p>
           ) : (
-            ideas.map((idea) => (
+            videoIdeas.map((idea) => (
               <div
                 key={idea.id}
                 className="p-4 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-all border border-gray-700 hover:border-purple-500/30"
@@ -53,9 +100,17 @@ export function VideoIdeas({ ideas }: VideoIdeasProps) {
                       <span className={`text-xs px-2 py-1 rounded border ${getPriorityColor(idea.priority)}`}>
                         {idea.priority}
                       </span>
-                      <span className={`text-xs ${getStatusColor(idea.status)}`}>
+                      <button
+                        onClick={() => cycleStatus(idea.id, idea.status)}
+                        className={cn(
+                          "text-xs px-2 py-1 rounded border flex items-center gap-1 hover:opacity-80 transition",
+                          getStatusColor(idea.status)
+                        )}
+                        title="Click to advance status"
+                      >
                         {idea.status}
-                      </span>
+                        <ChevronRight className="h-3 w-3" />
+                      </button>
                     </div>
                     <h3 className="font-semibold text-white text-lg mb-1">
                       {idea.title}
@@ -64,26 +119,28 @@ export function VideoIdeas({ ideas }: VideoIdeasProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-blue-400" />
-                    <div>
-                      <p className="text-xs text-gray-500">Est. Views</p>
-                      <p className="text-sm font-semibold text-white">
-                        {formatNumber(idea.estimatedViews)}
-                      </p>
+                {(idea.estimatedViews > 0 || idea.trendinessScore > 0) && (
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-blue-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Est. Views</p>
+                        <p className="text-sm font-semibold text-white">
+                          {formatNumber(idea.estimatedViews)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-yellow-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Trending Score</p>
+                        <p className="text-sm font-semibold text-white">
+                          {idea.trendinessScore}/100
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-yellow-400" />
-                    <div>
-                      <p className="text-xs text-gray-500">Trending Score</p>
-                      <p className="text-sm font-semibold text-white">
-                        {idea.trendinessScore}/100
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {idea.hooks.length > 0 && (
                   <div className="mb-3">
@@ -124,6 +181,40 @@ export function VideoIdeas({ ideas }: VideoIdeasProps) {
                 )}
               </div>
             ))
+          )}
+
+          {/* Add video idea */}
+          {showAdd ? (
+            <div className="rounded-lg border border-gray-700 bg-gray-900/80 p-3 space-y-2">
+              <input
+                value={newIdea.title}
+                onChange={(e) => setNewIdea({ ...newIdea, title: e.target.value })}
+                placeholder="Video title"
+                className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none"
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              />
+              <input
+                value={newIdea.topic}
+                onChange={(e) => setNewIdea({ ...newIdea, topic: e.target.value })}
+                placeholder="Topic"
+                className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none"
+              />
+              <div className="flex gap-2">
+                <button onClick={handleAdd} className="rounded-lg bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-500">
+                  Add
+                </button>
+                <button onClick={() => setShowAdd(false)} className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-400 hover:text-white">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-700 px-4 py-2.5 text-sm text-gray-500 hover:border-purple-500/50 hover:text-purple-400 transition"
+            >
+              <Plus className="h-4 w-4" /> Add Video Idea
+            </button>
           )}
         </div>
       </CardContent>

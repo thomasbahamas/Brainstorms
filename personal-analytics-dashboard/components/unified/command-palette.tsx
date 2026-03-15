@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useAppStore } from "@/lib/store"
 import { MODULE_REGISTRY } from "@/lib/protocol"
@@ -19,30 +19,9 @@ export function CommandPalette() {
   const router = useRouter()
   const { commandPaletteOpen, toggleCommandPalette, tasks, notes } = useAppStore()
   const [query, setQuery] = useState("")
+  const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        toggleCommandPalette()
-      }
-      if (e.key === "Escape" && commandPaletteOpen) {
-        toggleCommandPalette()
-      }
-    }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
-  }, [commandPaletteOpen, toggleCommandPalette])
-
-  useEffect(() => {
-    if (commandPaletteOpen) {
-      setQuery("")
-      setTimeout(() => inputRef.current?.focus(), 50)
-    }
-  }, [commandPaletteOpen])
-
-  if (!commandPaletteOpen) return null
+  const resultsRef = useRef<HTMLDivElement>(null)
 
   const q = query.toLowerCase()
 
@@ -101,11 +80,62 @@ export function CommandPalette() {
       )
   }
 
-  const handleSelect = (result: SearchResult) => {
+  const visibleResults = results.slice(0, 12)
+
+  const handleSelect = useCallback((result: SearchResult) => {
     if (result.href) router.push(result.href)
     if (result.action) result.action()
     toggleCommandPalette()
+  }, [router, toggleCommandPalette])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        toggleCommandPalette()
+      }
+      if (e.key === "Escape" && commandPaletteOpen) {
+        toggleCommandPalette()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [commandPaletteOpen, toggleCommandPalette])
+
+  useEffect(() => {
+    if (commandPaletteOpen) {
+      setQuery("")
+      setSelectedIndex(0)
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
+  }, [commandPaletteOpen])
+
+  // Reset selection when query changes
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [query])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setSelectedIndex((i) => Math.min(i + 1, visibleResults.length - 1))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setSelectedIndex((i) => Math.max(i - 1, 0))
+    } else if (e.key === "Enter" && visibleResults[selectedIndex]) {
+      e.preventDefault()
+      handleSelect(visibleResults[selectedIndex])
+    }
   }
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (!resultsRef.current) return
+    const selected = resultsRef.current.children[selectedIndex] as HTMLElement
+    if (selected) selected.scrollIntoView({ block: "nearest" })
+  }, [selectedIndex])
+
+  if (!commandPaletteOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
@@ -124,6 +154,7 @@ export function CommandPalette() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Search modules, tasks, notes, actions..."
             className="flex-1 bg-transparent py-4 text-white placeholder-gray-500 outline-none"
           />
@@ -136,17 +167,20 @@ export function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div className="max-h-[50vh] overflow-y-auto p-2">
-          {results.length === 0 ? (
+        <div ref={resultsRef} className="max-h-[50vh] overflow-y-auto p-2">
+          {visibleResults.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500">
               No results found
             </div>
           ) : (
-            results.slice(0, 12).map((result, i) => (
+            visibleResults.map((result, i) => (
               <button
                 key={i}
                 onClick={() => handleSelect(result)}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-white/5"
+                onMouseEnter={() => setSelectedIndex(i)}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
+                  i === selectedIndex ? "bg-white/10" : "hover:bg-white/5"
+                }`}
               >
                 <span className="flex h-6 min-w-[52px] items-center justify-center rounded bg-gray-800 px-2 text-[10px] font-bold uppercase text-gray-400">
                   {result.type}
@@ -167,7 +201,11 @@ export function CommandPalette() {
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-gray-800 px-4 py-2 text-[11px] text-gray-600">
-          <span>Navigate with arrow keys</span>
+          <span>
+            <kbd className="rounded border border-gray-700 px-1 py-0.5 font-mono">↑↓</kbd> navigate
+            {" · "}
+            <kbd className="rounded border border-gray-700 px-1 py-0.5 font-mono">↵</kbd> select
+          </span>
           <span>
             <kbd className="rounded border border-gray-700 px-1 py-0.5 font-mono">
               Esc

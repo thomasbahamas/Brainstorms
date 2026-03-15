@@ -3,6 +3,8 @@
 import { MODULE_REGISTRY } from "@/lib/protocol"
 import { ModuleCard } from "@/components/unified/module-card"
 import { useAppStore } from "@/lib/store"
+import { MorningBriefing } from "@/components/home/morning-briefing"
+import { SocialMetrics } from "@/components/home/social-metrics"
 import {
   Zap,
   AlertCircle,
@@ -10,7 +12,6 @@ import {
   Clock,
   MessageSquare,
   TrendingUp,
-  ArrowUpRight,
 } from "lucide-react"
 import { cn, formatCurrency } from "@/lib/utils"
 
@@ -29,13 +30,8 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome */}
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-1">Command Center</h1>
-        <p className="text-gray-400">
-          Your unified operating system — everything in one place.
-        </p>
-      </div>
+      {/* Morning Briefing */}
+      <MorningBriefing />
 
       {/* Live Status Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -62,33 +58,38 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Urgent Actions */}
-      {(urgentTasks.length > 0 || actionRequired.length > 0) && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-          <h2 className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4" />
-            Needs Attention
-          </h2>
-          <div className="space-y-2">
-            {urgentTasks.map((t) => (
-              <div key={t.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2 border border-gray-800">
-                <div className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />
-                <span className="text-sm text-white flex-1">{t.title}</span>
-                {t.dueDate && <span className="text-[10px] text-gray-500">{t.dueDate}</span>}
-                <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">task</span>
+      {/* Urgent Actions + Social Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          {(urgentTasks.length > 0 || actionRequired.length > 0) && (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+              <h2 className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Needs Attention
+              </h2>
+              <div className="space-y-2">
+                {urgentTasks.map((t) => (
+                  <div key={t.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2 border border-gray-800">
+                    <div className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />
+                    <span className="text-sm text-white flex-1">{t.title}</span>
+                    {t.dueDate && <span className="text-[10px] text-gray-500">{t.dueDate}</span>}
+                    <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">task</span>
+                  </div>
+                ))}
+                {actionRequired.map((m) => (
+                  <div key={m.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2 border border-gray-800">
+                    <div className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
+                    <span className="text-sm text-white flex-1">{m.subject}</span>
+                    <span className="text-[10px] text-gray-500">{m.from}</span>
+                    <span className="rounded bg-orange-500/10 px-1.5 py-0.5 text-[10px] text-orange-400">{m.platform}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            {actionRequired.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2 border border-gray-800">
-                <div className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
-                <span className="text-sm text-white flex-1">{m.subject}</span>
-                <span className="text-[10px] text-gray-500">{m.from}</span>
-                <span className="rounded bg-orange-500/10 px-1.5 py-0.5 text-[10px] text-orange-400">{m.platform}</span>
-              </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+        <SocialMetrics />
+      </div>
 
       {/* Module Grid */}
       <div>

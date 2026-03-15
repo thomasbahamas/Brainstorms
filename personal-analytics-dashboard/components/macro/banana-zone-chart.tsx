@@ -110,7 +110,7 @@ export function BananaZoneChart() {
                 <Tooltip
                   contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px' }}
                   itemStyle={{ color: '#FCD34D' }}
-                  formatter={(val: number) => [`$${(val / 1000).toFixed(2)} Trillion`, 'M2 Supply']}
+                  formatter={(val?: number) => val != null ? [`$${(val / 1000).toFixed(2)} Trillion`, 'M2 Supply'] : ['', '']}
                   labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 />
                 <Line

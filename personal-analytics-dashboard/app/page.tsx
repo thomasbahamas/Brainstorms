@@ -1,171 +1,111 @@
-'use client'
+"use client"
 
-import { StatsOverview } from "@/components/dashboard/stats-overview"
-import { WalletOverview } from "@/components/solana/wallet-overview"
-import { TokenHoldings } from "@/components/solana/token-holdings"
-import { NarrativesTracker } from "@/components/crypto/narratives-tracker"
-import { AirdropTracker } from "@/components/crypto/airdrop-tracker"
-import { TradingSignals } from "@/components/crypto/trading-signals"
-import { HotTopics } from "@/components/trends/hot-topics"
-import { VideoIdeas } from "@/components/content/video-ideas"
-import { NarrativeTriggers } from "@/components/content/narrative-triggers"
-import { FitnessTracker } from "@/components/health/fitness-tracker"
-import { BananaZoneChart } from "@/components/macro/banana-zone-chart"
-import { RegulatoryCommandCenter } from "@/components/regulatory/regulatory-command-center"
-import { RealMoneyWorkstation } from "@/components/rwa/real-money-workstation"
+import { MODULE_REGISTRY } from "@/lib/protocol"
+import { ModuleCard } from "@/components/unified/module-card"
+import { useAppStore } from "@/lib/store"
 import {
-  mockTokens,
-  mockNarratives,
-  mockAirdrops,
-  mockSignals,
-  mockTopics,
-  mockVideoIdeas,
-  mockHealthMetrics,
-  mockDashboardStats,
-} from "@/lib/mock-data"
-import { Activity, Menu, X } from "lucide-react"
-import { useState } from "react"
+  Zap,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  MessageSquare,
+  TrendingUp,
+  ArrowUpRight,
+} from "lucide-react"
+import { cn, formatCurrency } from "@/lib/utils"
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const { tasks, finances, messages, notes } = useAppStore()
+
+  const urgentTasks = tasks.filter((t) => t.priority === "critical" && t.status !== "done")
+  const inProgress = tasks.filter((t) => t.status === "in-progress")
+  const unread = messages.filter((m) => !m.read)
+  const actionRequired = messages.filter((m) => m.actionRequired && !m.read)
+  const totalIncome = finances.filter((f) => f.type === "income").reduce((s, f) => s + f.amount, 0)
+  const totalExpenses = finances.filter((f) => f.type === "expense").reduce((s, f) => s + f.amount, 0)
+  const pinnedNotes = notes.filter((n) => n.pinned)
+
+  const modules = MODULE_REGISTRY.filter((m) => m.id !== "dashboard")
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-950/80 backdrop-blur-lg">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">Personal Analytics</h1>
-                <p className="text-xs text-gray-400">Command Center v2.0</p>
-              </div>
-            </div>
+    <div className="space-y-8">
+      {/* Welcome */}
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-1">Command Center</h1>
+        <p className="text-gray-400">
+          Your unified operating system — everything in one place.
+        </p>
+      </div>
 
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
-            >
-              {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-
-            <div className="hidden lg:flex items-center gap-4">
-              <div className="rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 px-4 py-2">
-                <p className="text-xs text-gray-400">Solana Floor Creator</p>
-                <p className="text-sm font-semibold text-white">Dashboard</p>
-              </div>
+      {/* Live Status Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {[
+          { label: "Urgent", value: urgentTasks.length, icon: AlertCircle, color: urgentTasks.length > 0 ? "text-red-400" : "text-gray-500" },
+          { label: "In Progress", value: inProgress.length, icon: Clock, color: "text-blue-400" },
+          { label: "Unread", value: unread.length, icon: MessageSquare, color: unread.length > 0 ? "text-purple-400" : "text-gray-500" },
+          { label: "Actions", value: actionRequired.length, icon: Zap, color: actionRequired.length > 0 ? "text-orange-400" : "text-gray-500" },
+          { label: "Net Cash", value: formatCurrency(totalIncome - totalExpenses), icon: TrendingUp, color: totalIncome - totalExpenses >= 0 ? "text-green-400" : "text-red-400" },
+          { label: "Pinned", value: pinnedNotes.length, icon: CheckCircle2, color: "text-cyan-400" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="flex items-center gap-3 rounded-xl border border-gray-800 bg-gray-900/50 px-4 py-3"
+          >
+            <stat.icon className={cn("h-5 w-5 shrink-0", stat.color)} />
+            <div className="min-w-0">
+              <p className={cn("text-lg font-bold leading-tight", stat.color)}>
+                {stat.value}
+              </p>
+              <p className="text-[10px] text-gray-500">{stat.label}</p>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* Urgent Actions */}
+      {(urgentTasks.length > 0 || actionRequired.length > 0) && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+          <h2 className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Needs Attention
+          </h2>
+          <div className="space-y-2">
+            {urgentTasks.map((t) => (
+              <div key={t.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2 border border-gray-800">
+                <div className="h-2 w-2 rounded-full bg-red-400 animate-pulse" />
+                <span className="text-sm text-white flex-1">{t.title}</span>
+                {t.dueDate && <span className="text-[10px] text-gray-500">{t.dueDate}</span>}
+                <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">task</span>
+              </div>
+            ))}
+            {actionRequired.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2 border border-gray-800">
+                <div className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
+                <span className="text-sm text-white flex-1">{m.subject}</span>
+                <span className="text-[10px] text-gray-500">{m.from}</span>
+                <span className="rounded bg-orange-500/10 px-1.5 py-0.5 text-[10px] text-orange-400">{m.platform}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </header>
+      )}
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Dashboard Stats */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
-            <StatsOverview stats={mockDashboardStats} />
-          </section>
-
-          {/* Macro Intelligence - THE BIG PICTURE */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                🍌 Macro Intelligence: The Big Picture
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <BananaZoneChart />
-              <RegulatoryCommandCenter />
-            </div>
-          </section>
-
-          {/* Crypto Section */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Solana Analytics
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <WalletOverview
-                address="7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
-                balance={125.5}
-                usdValue={18825}
-                change24h={5.2}
-              />
-              <TokenHoldings tokens={mockTokens} />
-            </div>
-          </section>
-
-          {/* Narratives & Airdrops */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                Market Intelligence
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <NarrativesTracker narratives={mockNarratives} />
-              <AirdropTracker airdrops={mockAirdrops} />
-            </div>
-            {/* Real Money Section */}
-            <RealMoneyWorkstation />
-          </section>
-
-          {/* Trading & Topics */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                Opportunities
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TradingSignals signals={mockSignals} />
-              <HotTopics topics={mockTopics} />
-            </div>
-          </section>
-
-          {/* Content Strategy */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Solana Floor Content Strategy
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <NarrativeTriggers />
-              <VideoIdeas ideas={mockVideoIdeas} />
-            </div>
-          </section>
-
-          {/* Health & Fitness */}
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                Health & Fitness
-              </span>
-            </h2>
-            <div className="max-w-2xl">
-              <FitnessTracker metrics={mockHealthMetrics} weeklyStreak={12} />
-            </div>
-          </section>
+      {/* Module Grid */}
+      <div>
+        <h2 className="text-lg font-bold text-white mb-4">Modules</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {modules.map((mod) => (
+            <ModuleCard key={mod.id} module={mod} />
+          ))}
         </div>
-      </main>
+      </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 mt-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-400 text-sm">
-            <p>Personal Analytics Command Center v2.0 • From Trader Dashboard to Media Mogul HQ</p>
-            <p className="mt-2">Track Macro • Navigate Regulation • Build Content Empire • Stay Healthy</p>
-          </div>
-        </div>
-      </footer>
+      <div className="border-t border-gray-800 pt-6 text-center">
+        <p className="text-xs text-gray-600">
+          UNIFIED Protocol v3.0 — One App. Every Domain. Total Control.
+        </p>
+      </div>
     </div>
   )
 }

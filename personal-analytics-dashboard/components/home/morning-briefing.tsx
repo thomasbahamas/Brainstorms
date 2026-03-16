@@ -2,18 +2,27 @@
 
 import { useAppStore } from "@/lib/store"
 import { formatCurrency } from "@/lib/utils"
+import { useLiveWallet } from "@/lib/hooks/use-solana"
 import {
   Sun,
+  Moon,
   Target,
   Flame,
   TrendingUp,
+  TrendingDown,
   Video,
   Calendar,
+  Wallet,
+  Wifi,
+  Loader2,
 } from "lucide-react"
 import { format } from "date-fns"
 
+const WALLET_ADDRESS = process.env.NEXT_PUBLIC_SOLANA_WALLET || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+
 export function MorningBriefing() {
   const { tasks, finances, habits, goals, videoIdeas, journal } = useAppStore()
+  const { data: liveWallet, isLoading: walletLoading } = useLiveWallet(WALLET_ADDRESS)
 
   const today = format(new Date(), "yyyy-MM-dd")
   const todayFormatted = format(new Date(), "EEEE, MMMM d")
@@ -49,12 +58,13 @@ export function MorningBriefing() {
   const hour = new Date().getHours()
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
+  const GreeingIcon = hour < 17 ? Sun : Moon
 
   return (
     <div className="rounded-2xl border border-gray-800 bg-gradient-to-br from-gray-900 via-gray-900 to-purple-900/20 p-6">
       <div className="flex items-center gap-3 mb-5">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
-          <Sun className="h-5 w-5 text-white" />
+          <GreeingIcon className="h-5 w-5 text-white" />
         </div>
         <div>
           <h2 className="text-lg font-bold text-white">{greeting}</h2>
@@ -62,7 +72,49 @@ export function MorningBriefing() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Portfolio */}
+        <div className="rounded-xl bg-gray-800/50 border border-gray-700/50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Wallet className="h-4 w-4 text-purple-400" />
+            <h3 className="text-sm font-bold text-white">Portfolio</h3>
+            {liveWallet && (
+              <span className="ml-auto flex items-center gap-1 text-[10px] text-green-400">
+                <Wifi className="h-2.5 w-2.5" /> LIVE
+              </span>
+            )}
+          </div>
+          {walletLoading ? (
+            <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+            </div>
+          ) : liveWallet ? (
+            <div className="space-y-2">
+              <p className="text-2xl font-bold text-white">{formatCurrency(liveWallet.totalValue)}</p>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-400">{liveWallet.solBalance.toFixed(2)} SOL</span>
+                <span className="text-[10px] text-gray-600">@ {formatCurrency(liveWallet.solPrice)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {liveWallet.tokens[0]?.change24h >= 0 ? (
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-red-500" />
+                )}
+                <span className={`text-xs ${(liveWallet.tokens[0]?.change24h ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  SOL {(liveWallet.tokens[0]?.change24h ?? 0) >= 0 ? "+" : ""}{(liveWallet.tokens[0]?.change24h ?? 0).toFixed(2)}% 24h
+                </span>
+              </div>
+              <p className="text-[10px] text-gray-600">{liveWallet.tokens.length} tokens tracked</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xl font-bold text-gray-500">{formatCurrency(27825)}</p>
+              <p className="text-[10px] text-gray-600">Mock data — set NEXT_PUBLIC_SOLANA_WALLET to connect</p>
+            </div>
+          )}
+        </div>
+
         {/* Today's Focus */}
         <div className="rounded-xl bg-gray-800/50 border border-gray-700/50 p-4">
           <div className="flex items-center gap-2 mb-3">

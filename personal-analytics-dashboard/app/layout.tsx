@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppShell } from "@/components/unified/app-shell";
+import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
   title: "UNIFIED Protocol — One App for Everything",
@@ -14,10 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <AppShell>{children}</AppShell>
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );
 }
-
-import { AppShell } from "@/components/unified/app-shell";

@@ -3,13 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TokenHolding } from "@/types"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
-import { Coins, TrendingUp, TrendingDown } from "lucide-react"
+import { Coins, TrendingUp, TrendingDown, Loader2 } from "lucide-react"
 
 interface TokenHoldingsProps {
   tokens: TokenHolding[]
+  isLoading?: boolean
 }
 
-export function TokenHoldings({ tokens }: TokenHoldingsProps) {
+export function TokenHoldings({ tokens, isLoading = false }: TokenHoldingsProps) {
   const totalValue = tokens.reduce((sum, token) => sum + token.usdValue, 0)
 
   return (
@@ -19,6 +20,7 @@ export function TokenHoldings({ tokens }: TokenHoldingsProps) {
           <span className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-blue-500" />
             Token Holdings
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-500" />}
           </span>
           <span className="text-lg text-gray-400">
             {formatCurrency(totalValue)}
@@ -27,7 +29,12 @@ export function TokenHoldings({ tokens }: TokenHoldingsProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {tokens.length === 0 ? (
+          {isLoading && tokens.length === 0 ? (
+            <div className="flex items-center justify-center py-8 gap-2 text-gray-400">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Loading wallet...</span>
+            </div>
+          ) : tokens.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No tokens found</p>
           ) : (
             tokens.map((token) => (
@@ -43,7 +50,9 @@ export function TokenHoldings({ tokens }: TokenHoldingsProps) {
                   </div>
                   <div>
                     <p className="font-semibold text-white">{token.symbol}</p>
-                    <p className="text-sm text-gray-400">{token.name}</p>
+                    <p className="text-sm text-gray-400">
+                      {token.balance.toLocaleString(undefined, { maximumFractionDigits: 4 })} {token.symbol}
+                    </p>
                   </div>
                 </div>
 
@@ -51,7 +60,7 @@ export function TokenHoldings({ tokens }: TokenHoldingsProps) {
                   <p className="font-semibold text-white">
                     {formatCurrency(token.usdValue)}
                   </p>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center justify-end gap-1">
                     {token.change24h >= 0 ? (
                       <TrendingUp className="h-3 w-3 text-green-500" />
                     ) : (

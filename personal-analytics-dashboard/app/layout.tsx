@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { AppShell } from "@/components/unified/app-shell";
+import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
-  title: "Personal Analytics Dashboard",
-  description: "Comprehensive analytics for Solana, crypto narratives, airdrops, trading signals, content strategy, and personal health",
+  title: "UNIFIED Protocol — One App for Everything",
+  description: "Personal operating system: crypto intelligence, content engine, finance, tasks, knowledge base, comms, macro analysis, health tracking — all in one unified protocol.",
 };
 
 export default function RootLayout({
@@ -24,10 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="font-sans antialiased">
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

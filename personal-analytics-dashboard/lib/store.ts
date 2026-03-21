@@ -114,6 +114,8 @@ interface AppState {
   activeModule: string
   commandPaletteOpen: boolean
   sidebarCollapsed: boolean
+  mobileMenuOpen: boolean
+  walletAddress: string
 
   tasks: Task[]
   finances: FinanceEntry[]
@@ -128,6 +130,8 @@ interface AppState {
   setActiveModule: (id: string) => void
   toggleCommandPalette: () => void
   toggleSidebar: () => void
+  setMobileMenuOpen: (open: boolean) => void
+  setWalletAddress: (address: string) => void
 
   addTask: (task: Task) => void
   updateTask: (id: string, updates: Partial<Task>) => void
@@ -149,6 +153,7 @@ interface AppState {
   updateKeyResult: (goalId: string, krId: string, current: number) => void
 
   addHabit: (habit: Habit) => void
+  updateHabit: (id: string, updates: Partial<Habit>) => void
   deleteHabit: (id: string) => void
   toggleHabitDate: (id: string, date: string) => void
 
@@ -157,6 +162,7 @@ interface AppState {
   deleteJournalEntry: (id: string) => void
 
   updateVideoIdea: (id: string, updates: Partial<VideoIdeaStore>) => void
+  deleteVideoIdea: (id: string) => void
   addVideoIdea: (idea: VideoIdeaStore) => void
 }
 
@@ -166,6 +172,8 @@ export const useAppStore = create<AppState>()(
       activeModule: "dashboard",
       commandPaletteOpen: false,
       sidebarCollapsed: false,
+      mobileMenuOpen: false,
+      walletAddress: "",
 
       tasks: [
         {
@@ -439,6 +447,8 @@ export const useAppStore = create<AppState>()(
       setActiveModule: (id) => set({ activeModule: id }),
       toggleCommandPalette: () => set((s) => ({ commandPaletteOpen: !s.commandPaletteOpen })),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+      setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
+      setWalletAddress: (address) => set({ walletAddress: address }),
 
       addTask: (task) => set((s) => ({ tasks: [...s.tasks, task] })),
       updateTask: (id, updates) =>
@@ -496,6 +506,10 @@ export const useAppStore = create<AppState>()(
         })),
 
       addHabit: (habit) => set((s) => ({ habits: [...s.habits, habit] })),
+      updateHabit: (id, updates) =>
+        set((s) => ({
+          habits: s.habits.map((h) => (h.id === id ? { ...h, ...updates } : h)),
+        })),
       deleteHabit: (id) => set((s) => ({ habits: s.habits.filter((h) => h.id !== id) })),
       toggleHabitDate: (id, date) =>
         set((s) => ({
@@ -522,6 +536,7 @@ export const useAppStore = create<AppState>()(
         set((s) => ({
           videoIdeas: s.videoIdeas.map((v) => (v.id === id ? { ...v, ...updates } : v)),
         })),
+      deleteVideoIdea: (id) => set((s) => ({ videoIdeas: s.videoIdeas.filter((v) => v.id !== id) })),
       addVideoIdea: (idea) => set((s) => ({ videoIdeas: [...s.videoIdeas, idea] })),
     }),
     {
@@ -537,6 +552,7 @@ export const useAppStore = create<AppState>()(
         videoIdeas: state.videoIdeas,
         socialMetrics: state.socialMetrics,
         sidebarCollapsed: state.sidebarCollapsed,
+        walletAddress: state.walletAddress,
       }),
     }
   )

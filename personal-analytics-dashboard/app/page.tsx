@@ -34,7 +34,7 @@ export default function Home() {
       <MorningBriefing />
 
       {/* Live Status Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
         {[
           { label: "Urgent", value: urgentTasks.length, icon: AlertCircle, color: urgentTasks.length > 0 ? "text-red-400" : "text-gray-500" },
           { label: "In Progress", value: inProgress.length, icon: Clock, color: "text-blue-400" },
@@ -45,14 +45,14 @@ export default function Home() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center gap-3 rounded-xl border border-gray-800 bg-gray-900/50 px-4 py-3"
+            className="flex items-center gap-2 md:gap-3 rounded-xl border border-gray-800 bg-gray-900/50 px-3 py-2.5 md:px-4 md:py-3"
           >
-            <stat.icon className={cn("h-5 w-5 shrink-0", stat.color)} />
+            <stat.icon className={cn("h-4 w-4 md:h-5 md:w-5 shrink-0", stat.color)} />
             <div className="min-w-0">
-              <p className={cn("text-lg font-bold leading-tight", stat.color)}>
+              <p className={cn("text-sm md:text-lg font-bold leading-tight truncate", stat.color)}>
                 {stat.value}
               </p>
-              <p className="text-[10px] text-gray-500">{stat.label}</p>
+              <p className="text-[10px] text-gray-500 truncate">{stat.label}</p>
             </div>
           </div>
         ))}
@@ -94,7 +94,7 @@ export default function Home() {
       {/* Module Grid */}
       <div>
         <h2 className="text-lg font-bold text-white mb-4">Modules</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {modules.map((mod) => (
             <ModuleCard key={mod.id} module={mod} />
           ))}

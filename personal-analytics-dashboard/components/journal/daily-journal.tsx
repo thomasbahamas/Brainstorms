@@ -1,6 +1,7 @@
 "use client"
 
 import { useAppStore, JournalEntry } from "@/lib/store"
+import { toast } from "@/components/ui/toast"
 import {
   BookOpen,
   Plus,
@@ -10,6 +11,7 @@ import {
   Star,
   ChevronDown,
   Trash2,
+  Pencil,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -34,7 +36,7 @@ const JOURNAL_PROMPTS = [
 ]
 
 export function DailyJournal() {
-  const { journal, addJournalEntry, deleteJournalEntry } = useAppStore()
+  const { journal, addJournalEntry, updateJournalEntry, deleteJournalEntry } = useAppStore()
   const [showAdd, setShowAdd] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(journal[0]?.id || null)
   const today = format(new Date(), "yyyy-MM-dd")
@@ -56,8 +58,14 @@ export function DailyJournal() {
 
   const randomPrompt = JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]
 
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editData, setEditData] = useState({ mood: "good" as JournalEntry["mood"], wins: "", challenges: "", gratitude: "", tomorrowFocus: "" })
+
   const handleAdd = () => {
-    if (!newEntry.wins && !newEntry.gratitude) return
+    if (!newEntry.wins && !newEntry.gratitude) {
+      toast("Add at least one win or gratitude note", "error")
+      return
+    }
     addJournalEntry({
       id: `j${Date.now()}`,
       date: today,
@@ -68,8 +76,37 @@ export function DailyJournal() {
       tomorrowFocus: newEntry.tomorrowFocus,
       createdAt: new Date().toISOString(),
     })
+    toast("Journal entry saved")
     setNewEntry({ mood: "good", wins: "", challenges: "", gratitude: "", tomorrowFocus: "" })
     setShowAdd(false)
+  }
+
+  const startEdit = (entry: JournalEntry) => {
+    setEditingId(entry.id)
+    setEditData({
+      mood: entry.mood,
+      wins: entry.wins.join("\n"),
+      challenges: entry.challenges.join("\n"),
+      gratitude: entry.gratitude,
+      tomorrowFocus: entry.tomorrowFocus,
+    })
+  }
+
+  const handleSaveEdit = (id: string) => {
+    updateJournalEntry(id, {
+      mood: editData.mood,
+      wins: editData.wins.split("\n").filter(Boolean),
+      challenges: editData.challenges.split("\n").filter(Boolean),
+      gratitude: editData.gratitude,
+      tomorrowFocus: editData.tomorrowFocus,
+    })
+    toast("Journal entry updated")
+    setEditingId(null)
+  }
+
+  const handleDeleteEntry = (id: string) => {
+    deleteJournalEntry(id)
+    toast("Journal entry deleted")
   }
 
   return (
@@ -226,7 +263,30 @@ export function DailyJournal() {
                 />
               </button>
 
-              {isExpanded && (
+              {isExpanded && editingId === entry.id && (
+                <div className="border-t border-gray-800 p-4 space-y-3">
+                  <div className="flex gap-2">
+                    {(Object.keys(MOOD_CONFIG) as JournalEntry["mood"][]).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setEditData({ ...editData, mood: m })}
+                        className={cn("rounded-lg border px-2 py-1 text-xs transition", editData.mood === m ? MOOD_CONFIG[m].color : "border-gray-700 text-gray-500")}
+                      >
+                        {MOOD_CONFIG[m].icon} {MOOD_CONFIG[m].label}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea value={editData.wins} onChange={(e) => setEditData({ ...editData, wins: e.target.value })} placeholder="Wins (one per line)" rows={2} className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white placeholder-gray-500 outline-none resize-none" />
+                  <textarea value={editData.challenges} onChange={(e) => setEditData({ ...editData, challenges: e.target.value })} placeholder="Challenges (one per line)" rows={2} className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white placeholder-gray-500 outline-none resize-none" />
+                  <input value={editData.gratitude} onChange={(e) => setEditData({ ...editData, gratitude: e.target.value })} placeholder="Gratitude" className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white placeholder-gray-500 outline-none" />
+                  <input value={editData.tomorrowFocus} onChange={(e) => setEditData({ ...editData, tomorrowFocus: e.target.value })} placeholder="Tomorrow's focus" className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white placeholder-gray-500 outline-none" />
+                  <div className="flex gap-2">
+                    <button onClick={() => handleSaveEdit(entry.id)} className="rounded bg-purple-600 px-3 py-1.5 text-xs text-white hover:bg-purple-500">Save</button>
+                    <button onClick={() => setEditingId(null)} className="rounded border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:text-white">Cancel</button>
+                  </div>
+                </div>
+              )}
+              {isExpanded && editingId !== entry.id && (
                 <div className="border-t border-gray-800 p-4 space-y-3">
                   {entry.wins.length > 0 && (
                     <div>
@@ -262,9 +322,15 @@ export function DailyJournal() {
                       <p className="text-sm text-gray-300">{entry.tomorrowFocus}</p>
                     </div>
                   )}
-                  <div className="pt-2 flex justify-end">
+                  <div className="pt-2 flex justify-end gap-2">
                     <button
-                      onClick={() => deleteJournalEntry(entry.id)}
+                      onClick={() => startEdit(entry)}
+                      className="text-gray-600 hover:text-purple-400 transition"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEntry(entry.id)}
                       className="text-gray-600 hover:text-red-400 transition"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

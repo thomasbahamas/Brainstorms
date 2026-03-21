@@ -2,15 +2,16 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAppStore, VideoIdeaStore } from "@/lib/store"
+import { toast } from "@/components/ui/toast"
 import { formatNumber } from "@/lib/utils"
 import { cn } from "@/lib/utils"
-import { Video, Zap, Eye, Calendar, Plus, ChevronRight } from "lucide-react"
+import { Video, Zap, Eye, Calendar, Plus, ChevronRight, Trash2 } from "lucide-react"
 import { useState } from "react"
 
 const STATUS_FLOW: VideoIdeaStore["status"][] = ["idea", "planned", "filming", "editing", "published"]
 
 export function VideoIdeas() {
-  const { videoIdeas, updateVideoIdea, addVideoIdea } = useAppStore()
+  const { videoIdeas, updateVideoIdea, addVideoIdea, deleteVideoIdea } = useAppStore()
   const [showAdd, setShowAdd] = useState(false)
   const [newIdea, setNewIdea] = useState({ title: "", topic: "" })
 
@@ -39,8 +40,16 @@ export function VideoIdeas() {
     updateVideoIdea(id, { status: next })
   }
 
+  const handleDelete = (id: string) => {
+    deleteVideoIdea(id)
+    toast("Video idea deleted")
+  }
+
   const handleAdd = () => {
-    if (!newIdea.title) return
+    if (!newIdea.title) {
+      toast("Enter a video title", "error")
+      return
+    }
     addVideoIdea({
       id: `v${Date.now()}`,
       title: newIdea.title,
@@ -53,6 +62,7 @@ export function VideoIdeas() {
       keyPoints: [],
       status: "idea",
     })
+    toast("Video idea added")
     setNewIdea({ title: "", topic: "" })
     setShowAdd(false)
   }
@@ -110,6 +120,12 @@ export function VideoIdeas() {
                       >
                         {idea.status}
                         <ChevronRight className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(idea.id)}
+                        className="ml-auto rounded p-1 text-gray-600 hover:text-red-400 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                     <h3 className="font-semibold text-white text-lg mb-1">

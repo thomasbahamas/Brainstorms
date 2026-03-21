@@ -1,7 +1,7 @@
 "use client"
 
 import { useAppStore, Task } from "@/lib/store"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "@/components/ui/toast"
 import {
   CheckCircle2,
   Circle,
@@ -11,7 +11,10 @@ import {
   Tag,
   Calendar,
   Plus,
-  ArrowRight,
+  Trash2,
+  Pencil,
+  X,
+  Save,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -31,12 +34,86 @@ const STATUS_COLUMNS = [
 
 function TaskCard({ task }: { task: Task }) {
   const { updateTask, deleteTask } = useAppStore()
+  const [editing, setEditing] = useState(false)
+  const [editData, setEditData] = useState({
+    title: task.title,
+    description: task.description || "",
+    priority: task.priority,
+    dueDate: task.dueDate || "",
+  })
   const priority = PRIORITY_CONFIG[task.priority]
   const PriorityIcon = priority.icon
 
   const cycleStatus = () => {
     const next = task.status === "todo" ? "in-progress" : task.status === "in-progress" ? "done" : "todo"
     updateTask(task.id, { status: next })
+    if (next === "done") toast("Task completed!")
+  }
+
+  const handleSave = () => {
+    if (!editData.title.trim()) {
+      toast("Title is required", "error")
+      return
+    }
+    updateTask(task.id, {
+      title: editData.title,
+      description: editData.description || undefined,
+      priority: editData.priority,
+      dueDate: editData.dueDate || undefined,
+    })
+    setEditing(false)
+    toast("Task updated")
+  }
+
+  const handleDelete = () => {
+    deleteTask(task.id)
+    toast("Task deleted")
+  }
+
+  if (editing) {
+    return (
+      <div className="rounded-lg border border-purple-500/30 bg-gray-900/80 p-3 space-y-2">
+        <input
+          value={editData.title}
+          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+          className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white outline-none focus:border-purple-500"
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+        />
+        <textarea
+          value={editData.description}
+          onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+          placeholder="Description (optional)"
+          rows={2}
+          className="w-full rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white placeholder-gray-500 outline-none resize-none"
+        />
+        <div className="flex gap-2">
+          <select
+            value={editData.priority}
+            onChange={(e) => setEditData({ ...editData, priority: e.target.value as Task["priority"] })}
+            className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-white outline-none"
+          >
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <input
+            type="date"
+            value={editData.dueDate}
+            onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
+            className="flex-1 rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-white outline-none"
+          />
+        </div>
+        <div className="flex gap-1.5">
+          <button onClick={handleSave} className="flex items-center gap-1 rounded bg-purple-600 px-2.5 py-1 text-xs text-white hover:bg-purple-500">
+            <Save className="h-3 w-3" /> Save
+          </button>
+          <button onClick={() => setEditing(false)} className="rounded border border-gray-700 px-2.5 py-1 text-xs text-gray-400 hover:text-white">
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -70,6 +147,14 @@ function TaskCard({ task }: { task: Task }) {
               {task.description}
             </p>
           )}
+        </div>
+        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition">
+          <button onClick={() => { setEditData({ title: task.title, description: task.description || "", priority: task.priority, dueDate: task.dueDate || "" }); setEditing(true) }} className="rounded p-1 text-gray-500 hover:text-purple-400">
+            <Pencil className="h-3 w-3" />
+          </button>
+          <button onClick={handleDelete} className="rounded p-1 text-gray-500 hover:text-red-400">
+            <Trash2 className="h-3 w-3" />
+          </button>
         </div>
       </div>
 
@@ -109,32 +194,41 @@ export function TaskBoard() {
   const { tasks, addTask } = useAppStore()
   const [showAdd, setShowAdd] = useState(false)
   const [newTitle, setNewTitle] = useState("")
+  const [newPriority, setNewPriority] = useState<Task["priority"]>("medium")
+  const [newDueDate, setNewDueDate] = useState("")
 
   const handleAdd = () => {
-    if (!newTitle.trim()) return
+    if (!newTitle.trim()) {
+      toast("Enter a task title", "error")
+      return
+    }
     addTask({
       id: `t${Date.now()}`,
       title: newTitle,
       status: "todo",
-      priority: "medium",
+      priority: newPriority,
+      dueDate: newDueDate || undefined,
       tags: [],
       createdAt: new Date().toISOString().split("T")[0],
     })
+    toast("Task added")
     setNewTitle("")
+    setNewPriority("medium")
+    setNewDueDate("")
     setShowAdd(false)
   }
 
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Total", value: tasks.length, color: "text-white" },
           { label: "In Progress", value: tasks.filter((t) => t.status === "in-progress").length, color: "text-blue-400" },
           { label: "Critical", value: tasks.filter((t) => t.priority === "critical" && t.status !== "done").length, color: "text-red-400" },
           { label: "Done", value: tasks.filter((t) => t.status === "done").length, color: "text-green-400" },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-gray-800 bg-gray-900/50 p-4 text-center">
+          <div key={stat.label} className="rounded-xl border border-gray-800 bg-gray-900/50 p-3 text-center">
             <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
             <p className="text-xs text-gray-500">{stat.label}</p>
           </div>
@@ -144,21 +238,40 @@ export function TaskBoard() {
       {/* Add Task */}
       <div>
         {showAdd ? (
-          <div className="flex gap-2">
+          <div className="space-y-2 rounded-xl border border-gray-700 bg-gray-900/80 p-3">
             <input
               autoFocus
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               placeholder="What needs to be done?"
-              className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-purple-500"
+              className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-purple-500"
             />
-            <button onClick={handleAdd} className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500">
-              Add
-            </button>
-            <button onClick={() => setShowAdd(false)} className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-400 hover:text-white">
-              Cancel
-            </button>
+            <div className="flex gap-2">
+              <select
+                value={newPriority}
+                onChange={(e) => setNewPriority(e.target.value as Task["priority"])}
+                className="rounded-lg border border-gray-700 bg-gray-900 px-2 py-1.5 text-xs text-white outline-none"
+              >
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <input
+                type="date"
+                value={newDueDate}
+                onChange={(e) => setNewDueDate(e.target.value)}
+                placeholder="Due date"
+                className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-2 py-1.5 text-xs text-white outline-none"
+              />
+              <button onClick={handleAdd} className="rounded-lg bg-purple-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-purple-500">
+                Add
+              </button>
+              <button onClick={() => setShowAdd(false)} className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:text-white">
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
           <button
@@ -172,7 +285,7 @@ export function TaskBoard() {
       </div>
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {STATUS_COLUMNS.map((col) => {
           const colTasks = tasks
             .filter((t) => t.status === col.key)

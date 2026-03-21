@@ -1,6 +1,7 @@
 "use client"
 
 import { useAppStore, KnowledgeNote } from "@/lib/store"
+import { toast } from "@/components/ui/toast"
 import {
   Pin,
   PinOff,
@@ -13,6 +14,7 @@ import {
   Search,
   Trash2,
   X,
+  ExternalLink,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -26,6 +28,7 @@ const CATEGORY_CONFIG = {
 
 function NoteCard({ note }: { note: KnowledgeNote }) {
   const { togglePinNote, deleteNote } = useAppStore()
+  const handleDelete = () => { deleteNote(note.id); toast("Note deleted") }
   const cat = CATEGORY_CONFIG[note.category]
   const CatIcon = cat.icon
 
@@ -43,13 +46,20 @@ function NoteCard({ note }: { note: KnowledgeNote }) {
           <button onClick={() => togglePinNote(note.id)} className="rounded p-1 text-gray-500 hover:text-purple-400">
             {note.pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
           </button>
-          <button onClick={() => deleteNote(note.id)} className="rounded p-1 text-gray-500 hover:text-red-400">
+          <button onClick={handleDelete} className="rounded p-1 text-gray-500 hover:text-red-400">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
       <p className="text-xs text-gray-400 leading-relaxed mb-3">{note.content}</p>
+
+      {note.url && (
+        <a href={note.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 mb-3 truncate">
+          <ExternalLink className="h-3 w-3 shrink-0" />
+          {note.url}
+        </a>
+      )}
 
       {note.tags.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -77,7 +87,7 @@ export function KnowledgeBase() {
   const [search, setSearch] = useState("")
   const [filterCategory, setFilterCategory] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
-  const [newNote, setNewNote] = useState({ title: "", content: "", category: "note" as KnowledgeNote["category"], tags: "" })
+  const [newNote, setNewNote] = useState({ title: "", content: "", category: "note" as KnowledgeNote["category"], tags: "", url: "" })
 
   const filtered = notes
     .filter((n) => {
@@ -99,17 +109,22 @@ export function KnowledgeBase() {
     })
 
   const handleAdd = () => {
-    if (!newNote.title || !newNote.content) return
+    if (!newNote.title || !newNote.content) {
+      toast("Title and content are required", "error")
+      return
+    }
     addNote({
       id: `n${Date.now()}`,
       title: newNote.title,
       content: newNote.content,
       category: newNote.category,
       tags: newNote.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      url: newNote.url || undefined,
       createdAt: new Date().toISOString().split("T")[0],
       pinned: false,
     })
-    setNewNote({ title: "", content: "", category: "note", tags: "" })
+    toast("Note saved")
+    setNewNote({ title: "", content: "", category: "note", tags: "", url: "" })
     setShowAdd(false)
   }
 
@@ -165,6 +180,7 @@ export function KnowledgeBase() {
         <div className="rounded-xl border border-gray-700 bg-gray-900/80 p-4 space-y-3">
           <input value={newNote.title} onChange={(e) => setNewNote({ ...newNote, title: e.target.value })} placeholder="Title" className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none" />
           <textarea value={newNote.content} onChange={(e) => setNewNote({ ...newNote, content: e.target.value })} placeholder="Content..." rows={3} className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none resize-none" />
+          <input value={newNote.url} onChange={(e) => setNewNote({ ...newNote, url: e.target.value })} placeholder="URL (optional)" className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none" />
           <div className="flex gap-2">
             <select value={newNote.category} onChange={(e) => setNewNote({ ...newNote, category: e.target.value as KnowledgeNote["category"] })} className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none">
               <option value="note">Note</option>

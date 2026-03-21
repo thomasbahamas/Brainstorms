@@ -14,6 +14,7 @@ import {
   Target,
   Flame,
   BookOpen,
+  Settings,
   type LucideIcon,
 } from "lucide-react"
 
@@ -183,6 +184,17 @@ export const MODULE_REGISTRY: AppModule[] = [
     gradient: "from-sky-500 to-blue-500",
     href: "/comms",
     category: "tactical",
+    status: "active",
+  },
+  {
+    id: "settings",
+    name: "Settings",
+    shortName: "Settings",
+    description: "Configure wallet, preferences, and app settings",
+    icon: Settings,
+    gradient: "from-gray-500 to-gray-600",
+    href: "/settings",
+    category: "system",
     status: "active",
   },
 ]

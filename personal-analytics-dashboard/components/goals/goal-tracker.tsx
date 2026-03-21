@@ -1,6 +1,7 @@
 "use client"
 
 import { useAppStore, Goal, KeyResult } from "@/lib/store"
+import { toast } from "@/components/ui/toast"
 import { formatNumber } from "@/lib/utils"
 import {
   Target,
@@ -8,7 +9,6 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  Trophy,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -33,7 +33,14 @@ export function GoalTracker() {
   })
 
   const handleAdd = () => {
-    if (!newGoal.title || !newGoal.targetDate) return
+    if (!newGoal.title) {
+      toast("Goal title is required", "error")
+      return
+    }
+    if (!newGoal.targetDate) {
+      toast("Target date is required", "error")
+      return
+    }
     addGoal({
       id: `g${Date.now()}`,
       title: newGoal.title,
@@ -44,6 +51,7 @@ export function GoalTracker() {
       keyResults: [],
       createdAt: new Date().toISOString().split("T")[0],
     })
+    toast("Goal added")
     setNewGoal({ title: "", description: "", category: "career", targetDate: "" })
     setShowAdd(false)
   }
@@ -55,9 +63,19 @@ export function GoalTracker() {
     return "from-red-500 to-orange-400"
   }
 
+  const handleDelete = (id: string) => {
+    deleteGoal(id)
+    toast("Goal deleted")
+  }
+
   return (
     <div className="space-y-4">
-      {/* Goals list */}
+      {goals.length === 0 && !showAdd && (
+        <div className="rounded-xl border border-dashed border-gray-800 p-12 text-center text-gray-500">
+          No goals yet — set your first goal to start tracking progress
+        </div>
+      )}
+
       {goals.map((goal) => (
         <div
           key={goal.id}
@@ -87,7 +105,6 @@ export function GoalTracker() {
               </div>
               <p className="text-xs text-gray-500 truncate">{goal.description}</p>
             </div>
-            {/* Progress ring */}
             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
               <svg className="h-12 w-12 -rotate-90">
                 <circle cx="24" cy="24" r="20" fill="none" stroke="#1f2937" strokeWidth="3" />
@@ -96,13 +113,13 @@ export function GoalTracker() {
                   cy="24"
                   r="20"
                   fill="none"
-                  stroke="url(#progress-gradient)"
+                  stroke="url(#pg)"
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeDasharray={`${(goal.progress / 100) * 125.6} 125.6`}
                 />
                 <defs>
-                  <linearGradient id="progress-gradient">
+                  <linearGradient id="pg">
                     <stop offset="0%" stopColor="#a855f7" />
                     <stop offset="100%" stopColor="#ec4899" />
                   </linearGradient>
@@ -127,16 +144,16 @@ export function GoalTracker() {
                   Target: {goal.targetDate}
                 </span>
                 <button
-                  onClick={() => deleteGoal(goal.id)}
+                  onClick={() => handleDelete(goal.id)}
                   className="text-gray-600 hover:text-red-400 transition"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
 
-              {/* Key Results */}
               {goal.keyResults.length > 0 ? (
                 <div className="space-y-3">
+                  <p className="text-[10px] font-bold uppercase text-gray-500">Key Results (click to update)</p>
                   {goal.keyResults.map((kr) => (
                     <KeyResultRow
                       key={kr.id}
@@ -152,7 +169,6 @@ export function GoalTracker() {
                 </p>
               )}
 
-              {/* Progress bar */}
               <div className="pt-2">
                 <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
                   <div
@@ -239,15 +255,47 @@ function KeyResultRow({
   goalId: string
   onUpdate: (goalId: string, krId: string, current: number) => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(kr.current.toString())
   const pct = Math.min((kr.current / kr.target) * 100, 100)
+
+  const handleSave = () => {
+    const num = parseFloat(value)
+    if (isNaN(num) || num < 0) {
+      toast("Enter a valid number", "error")
+      return
+    }
+    onUpdate(goalId, kr.id, num)
+    toast(`Updated ${kr.title}`)
+    setEditing(false)
+  }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-gray-300">{kr.title}</span>
-        <span className="text-xs text-gray-400">
-          {formatNumber(kr.current, kr.current >= 1000 ? 1 : 0)} / {formatNumber(kr.target, kr.target >= 1000 ? 1 : 0)} {kr.unit}
-        </span>
+        {editing ? (
+          <div className="flex items-center gap-1">
+            <input
+              autoFocus
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false) }}
+              className="w-20 rounded border border-gray-600 bg-gray-800 px-1.5 py-0.5 text-xs text-white outline-none text-right"
+            />
+            <span className="text-[10px] text-gray-500">/ {formatNumber(kr.target, kr.target >= 1000 ? 1 : 0)} {kr.unit}</span>
+            <button onClick={handleSave} className="ml-1 text-green-400 hover:text-green-300">
+              <CheckCircle className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => { setValue(kr.current.toString()); setEditing(true) }}
+            className="text-xs text-gray-400 hover:text-purple-400 transition"
+          >
+            {formatNumber(kr.current, kr.current >= 1000 ? 1 : 0)} / {formatNumber(kr.target, kr.target >= 1000 ? 1 : 0)} {kr.unit}
+          </button>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-gray-800 overflow-hidden">
@@ -261,3 +309,6 @@ function KeyResultRow({
     </div>
   )
 }
+
+// Need this import for the check icon in KR row
+import { CheckCircle } from "lucide-react"

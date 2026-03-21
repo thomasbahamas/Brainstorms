@@ -18,11 +18,12 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 
-const WALLET_ADDRESS = process.env.NEXT_PUBLIC_SOLANA_WALLET || "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+const FALLBACK_ADDRESS = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
 
 export function MorningBriefing() {
-  const { tasks, finances, habits, goals, videoIdeas, journal } = useAppStore()
-  const { data: liveWallet, isLoading: walletLoading } = useLiveWallet(WALLET_ADDRESS)
+  const { tasks, finances, habits, goals, videoIdeas, journal, walletAddress: storedAddress } = useAppStore()
+  const walletAddr = storedAddress || process.env.NEXT_PUBLIC_SOLANA_WALLET || FALLBACK_ADDRESS
+  const { data: liveWallet, isLoading: walletLoading } = useLiveWallet(walletAddr)
 
   const today = format(new Date(), "yyyy-MM-dd")
   const todayFormatted = format(new Date(), "EEEE, MMMM d")

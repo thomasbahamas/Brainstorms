@@ -7,17 +7,27 @@ import { MODULE_REGISTRY } from "@/lib/protocol"
 import { Search, ArrowRight, X } from "lucide-react"
 
 interface SearchResult {
-  type: "module" | "task" | "note" | "action"
+  type: "module" | "task" | "note" | "goal" | "habit" | "journal" | "finance" | "video" | "message"
   title: string
   subtitle: string
   href?: string
   action?: () => void
-  icon?: string
 }
 
 export function CommandPalette() {
   const router = useRouter()
-  const { commandPaletteOpen, toggleCommandPalette, tasks, notes } = useAppStore()
+  const {
+    commandPaletteOpen,
+    toggleCommandPalette,
+    tasks,
+    notes,
+    goals,
+    habits,
+    journal,
+    finances,
+    videoIdeas,
+    messages,
+  } = useAppStore()
   const [query, setQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -43,12 +53,13 @@ export function CommandPalette() {
     })
   )
 
-  // Tasks
   if (q) {
+    // Tasks
     tasks
       .filter(
         (t) =>
           t.title.toLowerCase().includes(q) ||
+          (t.description?.toLowerCase().includes(q)) ||
           t.tags.some((tag) => tag.includes(q))
       )
       .forEach((t) =>
@@ -59,10 +70,8 @@ export function CommandPalette() {
           href: "/tasks",
         })
       )
-  }
 
-  // Notes
-  if (q) {
+    // Notes
     notes
       .filter(
         (n) =>
@@ -78,9 +87,106 @@ export function CommandPalette() {
           href: "/knowledge",
         })
       )
+
+    // Goals
+    goals
+      .filter(
+        (g) =>
+          g.title.toLowerCase().includes(q) ||
+          g.description.toLowerCase().includes(q) ||
+          g.keyResults.some((kr) => kr.title.toLowerCase().includes(q))
+      )
+      .forEach((g) =>
+        results.push({
+          type: "goal",
+          title: g.title,
+          subtitle: `${g.category} · ${g.progress}% complete`,
+          href: "/goals",
+        })
+      )
+
+    // Habits
+    habits
+      .filter((h) => h.name.toLowerCase().includes(q))
+      .forEach((h) =>
+        results.push({
+          type: "habit",
+          title: h.name,
+          subtitle: `${h.frequency} · ${h.completedDates.length} completions`,
+          href: "/habits",
+        })
+      )
+
+    // Journal entries
+    journal
+      .filter(
+        (j) =>
+          j.wins.some((w) => w.toLowerCase().includes(q)) ||
+          j.challenges.some((c) => c.toLowerCase().includes(q)) ||
+          j.gratitude.toLowerCase().includes(q) ||
+          j.tomorrowFocus.toLowerCase().includes(q)
+      )
+      .forEach((j) =>
+        results.push({
+          type: "journal",
+          title: `Journal — ${j.date}`,
+          subtitle: `${j.mood} · ${j.wins.length} wins`,
+          href: "/journal",
+        })
+      )
+
+    // Finances
+    finances
+      .filter(
+        (f) =>
+          f.description.toLowerCase().includes(q) ||
+          f.category.toLowerCase().includes(q)
+      )
+      .forEach((f) =>
+        results.push({
+          type: "finance",
+          title: f.description,
+          subtitle: `${f.type} · ${f.category} · $${f.amount}`,
+          href: "/finance",
+        })
+      )
+
+    // Video ideas
+    videoIdeas
+      .filter(
+        (v) =>
+          v.title.toLowerCase().includes(q) ||
+          v.topic.toLowerCase().includes(q) ||
+          v.hooks.some((h) => h.toLowerCase().includes(q))
+      )
+      .forEach((v) =>
+        results.push({
+          type: "video",
+          title: v.title,
+          subtitle: `${v.status} · ${v.topic}`,
+          href: "/content",
+        })
+      )
+
+    // Messages
+    messages
+      .filter(
+        (m) =>
+          m.subject.toLowerCase().includes(q) ||
+          m.from.toLowerCase().includes(q) ||
+          m.preview.toLowerCase().includes(q)
+      )
+      .forEach((m) =>
+        results.push({
+          type: "message",
+          title: m.subject,
+          subtitle: `${m.platform} · ${m.from}`,
+          href: "/comms",
+        })
+      )
   }
 
-  const visibleResults = results.slice(0, 12)
+  const visibleResults = results.slice(0, 15)
 
   const handleSelect = useCallback((result: SearchResult) => {
     if (result.href) router.push(result.href)
@@ -110,7 +216,6 @@ export function CommandPalette() {
     }
   }, [commandPaletteOpen])
 
-  // Reset selection when query changes
   useEffect(() => {
     setSelectedIndex(0)
   }, [query])
@@ -128,7 +233,6 @@ export function CommandPalette() {
     }
   }
 
-  // Scroll selected item into view
   useEffect(() => {
     if (!resultsRef.current) return
     const selected = resultsRef.current.children[selectedIndex] as HTMLElement
@@ -137,8 +241,20 @@ export function CommandPalette() {
 
   if (!commandPaletteOpen) return null
 
+  const TYPE_COLORS: Record<string, string> = {
+    module: "bg-purple-500/20 text-purple-400",
+    task: "bg-blue-500/20 text-blue-400",
+    note: "bg-pink-500/20 text-pink-400",
+    goal: "bg-green-500/20 text-green-400",
+    habit: "bg-orange-500/20 text-orange-400",
+    journal: "bg-amber-500/20 text-amber-400",
+    finance: "bg-emerald-500/20 text-emerald-400",
+    video: "bg-cyan-500/20 text-cyan-400",
+    message: "bg-sky-500/20 text-sky-400",
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -155,7 +271,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search modules, tasks, notes, actions..."
+            placeholder="Search everything..."
             className="flex-1 bg-transparent py-4 text-white placeholder-gray-500 outline-none"
           />
           <button
@@ -170,19 +286,19 @@ export function CommandPalette() {
         <div ref={resultsRef} className="max-h-[50vh] overflow-y-auto p-2">
           {visibleResults.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500">
-              No results found
+              {q ? "No results found" : "Start typing to search..."}
             </div>
           ) : (
             visibleResults.map((result, i) => (
               <button
-                key={i}
+                key={`${result.type}-${i}`}
                 onClick={() => handleSelect(result)}
                 onMouseEnter={() => setSelectedIndex(i)}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
                   i === selectedIndex ? "bg-white/10" : "hover:bg-white/5"
                 }`}
               >
-                <span className="flex h-6 min-w-[52px] items-center justify-center rounded bg-gray-800 px-2 text-[10px] font-bold uppercase text-gray-400">
+                <span className={`flex h-6 min-w-[52px] items-center justify-center rounded px-2 text-[10px] font-bold uppercase ${TYPE_COLORS[result.type] || "bg-gray-800 text-gray-400"}`}>
                   {result.type}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -207,10 +323,12 @@ export function CommandPalette() {
             <kbd className="rounded border border-gray-700 px-1 py-0.5 font-mono">↵</kbd> select
           </span>
           <span>
-            <kbd className="rounded border border-gray-700 px-1 py-0.5 font-mono">
-              Esc
-            </kbd>{" "}
-            to close
+            {q && `${visibleResults.length} result${visibleResults.length !== 1 ? "s" : ""}`}
+            {!q && (
+              <>
+                <kbd className="rounded border border-gray-700 px-1 py-0.5 font-mono">Esc</kbd> to close
+              </>
+            )}
           </span>
         </div>
       </div>

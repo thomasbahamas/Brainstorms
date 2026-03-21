@@ -1,6 +1,7 @@
 "use client"
 
 import { useAppStore, FinanceEntry } from "@/lib/store"
+import { toast } from "@/components/ui/toast"
 import { formatCurrency } from "@/lib/utils"
 import {
   ArrowUpRight,
@@ -12,12 +13,13 @@ import {
   CreditCard,
   Repeat,
   Plus,
+  Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
 export function FinanceOverview() {
-  const { finances, addFinanceEntry } = useAppStore()
+  const { finances, addFinanceEntry, deleteFinanceEntry } = useAppStore()
   const [showAdd, setShowAdd] = useState(false)
   const [newEntry, setNewEntry] = useState({ type: "income" as "income" | "expense", category: "", amount: "", description: "" })
 
@@ -41,7 +43,10 @@ export function FinanceOverview() {
   }, {} as Record<string, number>)
 
   const handleAdd = () => {
-    if (!newEntry.category || !newEntry.amount || !newEntry.description) return
+    if (!newEntry.category || !newEntry.amount || !newEntry.description) {
+      toast("Fill in all fields", "error")
+      return
+    }
     addFinanceEntry({
       id: `f${Date.now()}`,
       type: newEntry.type,
@@ -50,8 +55,14 @@ export function FinanceOverview() {
       description: newEntry.description,
       date: new Date().toISOString().split("T")[0],
     })
+    toast("Transaction added")
     setNewEntry({ type: "income", category: "", amount: "", description: "" })
     setShowAdd(false)
+  }
+
+  const handleDelete = (id: string) => {
+    deleteFinanceEntry(id)
+    toast("Transaction deleted")
   }
 
   return (
@@ -191,8 +202,8 @@ export function FinanceOverview() {
           {finances
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
             .map((entry) => (
-              <div key={entry.id} className="flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2.5 border border-gray-800/50">
-                <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", entry.type === "income" ? "bg-green-500/10" : "bg-red-500/10")}>
+              <div key={entry.id} className="group flex items-center gap-3 rounded-lg bg-gray-900/50 px-3 py-2.5 border border-gray-800/50">
+                <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", entry.type === "income" ? "bg-green-500/10" : "bg-red-500/10")}>
                   {entry.type === "income" ? (
                     <ArrowUpRight className="h-4 w-4 text-green-400" />
                   ) : (
@@ -203,12 +214,18 @@ export function FinanceOverview() {
                   <p className="text-sm text-white truncate">{entry.description}</p>
                   <p className="text-[10px] text-gray-500">{entry.category} · {entry.date}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p className={cn("text-sm font-bold", entry.type === "income" ? "text-green-400" : "text-red-400")}>
                     {entry.type === "income" ? "+" : "-"}{formatCurrency(entry.amount)}
                   </p>
                   {entry.recurring && <p className="text-[10px] text-purple-400">recurring</p>}
                 </div>
+                <button
+                  onClick={() => handleDelete(entry.id)}
+                  className="shrink-0 opacity-0 group-hover:opacity-100 rounded p-1 text-gray-600 hover:text-red-400 transition"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
         </div>
